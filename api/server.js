@@ -125,13 +125,18 @@ app.post('/api/chat', async (req, res) => {
   const model = typeof body.model === 'string' && body.model.trim() ? body.model.trim() : ''
 
   const controller = new AbortController()
-  req.on('close', () => controller.abort())
+  // Abort the upstream call only when the client really goes away. `req` emits
+  // 'close' as soon as its body is consumed, which would cancel every reply.
+  res.on('close', () => {
+    if (!res.writableEnded) controller.abort()
+  })
+  const signal = AbortSignal.any([controller.signal, AbortSignal.timeout(120_000)])
 
   let upstream
   try {
     upstream = await fetch(`${OPENROUTER_BASE}/chat/completions`, {
       method: 'POST',
-      signal: controller.signal,
+      signal,
       headers: {
         Authorization: `Bearer ${key}`,
         'Content-Type': 'application/json',
@@ -146,7 +151,10 @@ app.post('/api/chat', async (req, res) => {
       }),
     })
   } catch (error) {
-    if (controller.signal.aborted) return
+    if (controller.signal.aborted) {
+      res.end()
+      return
+    }
     return res.status(502).json({
       error: 'upstream_unreachable',
       message: 'Could not reach OpenRouter. Check the connection and try again.',
