@@ -30,9 +30,9 @@ jobs:
       - run: npm ci
       - run: npm run build
         env:
-          # Repository variable holding the deployed API URL, e.g.
-          # https://openrouterfree-api.onrender.com
-          VITE_API_BASE_URL: ${{ vars.API_BASE_URL }}
+          # Deployed API origin. The repository variable API_BASE_URL overrides
+          # it, so moving the API elsewhere needs no workflow edit.
+          VITE_API_BASE_URL: ${{ vars.API_BASE_URL || 'https://openrouterfree-api.onrender.com' }}
       - uses: actions/configure-pages@v5
       - uses: actions/upload-pages-artifact@v3
         with:

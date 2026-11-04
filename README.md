@@ -52,9 +52,10 @@ service, so the API runs on Render and the deployed client calls it directly.
    `OPENROUTER_API_KEY` when prompted (it is marked `sync: false`, so it is never
    stored in the repository). Note the service URL, e.g.
    `https://openrouterfree-api.onrender.com`.
-2. **Client build target** — repository *Settings* → *Secrets and variables* →
-   *Actions* → *Variables* → new variable `API_BASE_URL` with that Render URL
-   (no trailing slash).
+2. **Client build target** — the workflow builds against
+   `https://openrouterfree-api.onrender.com` by default. To point the client at a
+   different API, set repository *Settings* → *Secrets and variables* → *Actions*
+   → *Variables* → `API_BASE_URL` (no trailing slash).
 3. **Pages source** — *Settings* → *Pages* → *Build and deployment* → *Source*:
    **GitHub Actions**.
 4. Push to `main` (or run *Deploy client to GitHub Pages* manually). The workflow
