@@ -142,6 +142,22 @@ function normalizeMessages(raw) {
   return cleaned
 }
 
+// The service URL is opened in a browser as often as it is called, so the root
+// answers with a status summary instead of the catch-all 404 below.
+app.get('/', (_req, res) => {
+  res.json({
+    ok: true,
+    service: 'srt ai api',
+    message: 'The srt ai API is running.',
+    keyConfigured: Boolean(apiKey()),
+    endpoints: {
+      health: 'GET /api/health',
+      models: 'GET /api/models',
+      chat: 'POST /api/chat',
+    },
+  })
+})
+
 app.get('/api/health', (_req, res) => {
   res.json({ ok: true, keyConfigured: Boolean(apiKey()) })
 })

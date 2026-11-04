@@ -9,7 +9,7 @@ attachments per message, 8 MB each.
 
 - `client/` — Vite + React single-page app (dev server on port 3000)
 - `api/` — Express service that streams chat completions from OpenRouter
-  (`/api/models`, `/api/chat`, `/api/health`)
+  (`/api/models`, `/api/chat`, `/api/health`; `/` returns a status summary)
 
 ## Local development
 
