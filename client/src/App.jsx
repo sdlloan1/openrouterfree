@@ -4,7 +4,7 @@ import ModelPicker from './components/ModelPicker'
 import Composer from './components/Composer'
 import Hero from './components/Hero'
 import Thread from './components/Thread'
-import { fetchModels, streamChat } from './lib/api'
+import { fetchModels, streamChat, toApiMessages } from './lib/api'
 import {
   loadConversations,
   loadPref,
@@ -23,7 +23,6 @@ export default function App() {
   const [error, setError] = useState(null)
   const [draft, setDraft] = useState('')
   const [sidebarOpen, setSidebarOpen] = useState(false)
-  const [theme, setTheme] = useState(() => loadPref('theme') || 'dark')
   const abortRef = useRef(null)
 
   const active = useMemo(
@@ -36,11 +35,6 @@ export default function App() {
   useEffect(() => {
     saveConversations(conversations)
   }, [conversations])
-
-  useEffect(() => {
-    document.documentElement.dataset.theme = theme
-    savePref('theme', theme)
-  }, [theme])
 
   useEffect(() => {
     if (modelId) savePref('model', modelId)
@@ -114,16 +108,17 @@ export default function App() {
   }, [])
 
   const send = useCallback(
-    (text) => {
+    (text, attachments = []) => {
       const content = text.trim()
-      if (!content || streaming || keyConfigured === false) return
+      if ((!content && !attachments.length) || streaming || keyConfigured === false) return
 
       const base = conversations.find((conversation) => conversation.id === activeId) || newConversation(modelId)
-      const history = [...base.messages, { role: 'user', content }]
+      const history = [...base.messages, { role: 'user', content, attachments }]
+      const titleSource = content || attachments[0]?.name || 'New chat'
       const conversation = {
         ...base,
         model: modelId || base.model,
-        title: base.messages.length ? base.title : content.replace(/\s+/g, ' ').slice(0, 48),
+        title: base.messages.length ? base.title : titleSource.replace(/\s+/g, ' ').slice(0, 48),
         messages: [...history, { role: 'assistant', content: '' }],
         updatedAt: Date.now(),
       }
@@ -136,10 +131,7 @@ export default function App() {
       setActiveId(conversation.id)
       setDraft('')
       setError(null)
-      runStream(
-        conversation,
-        history.map(({ role, content: messageContent }) => ({ role, content: messageContent }))
-      )
+      runStream(conversation, toApiMessages(history))
     },
     [activeId, conversations, keyConfigured, modelId, runStream, streaming]
   )
@@ -162,10 +154,7 @@ export default function App() {
       previous.map((item) => (item.id === conversation.id ? conversation : item))
     )
     setError(null)
-    runStream(
-      conversation,
-      history.map(({ role, content }) => ({ role, content }))
-    )
+    runStream(conversation, toApiMessages(history))
   }, [activeId, conversations, runStream, streaming])
 
   const stop = useCallback(() => {
@@ -210,8 +199,6 @@ export default function App() {
         onNew={startNewChat}
         onSelect={selectChat}
         onDelete={deleteChat}
-        theme={theme}
-        onToggleTheme={() => setTheme((current) => (current === 'dark' ? 'light' : 'dark'))}
       />
 
       <main className="main">

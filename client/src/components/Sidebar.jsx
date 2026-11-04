@@ -6,8 +6,6 @@ export default function Sidebar({
   onNew,
   onSelect,
   onDelete,
-  theme,
-  onToggleTheme,
 }) {
   return (
     <aside className={`sidebar${open ? ' open' : ''}`} aria-label="Chat history">
@@ -65,9 +63,6 @@ export default function Sidebar({
           <span className="pulse-dot" />
           <span>{conversations.length ? 'Saved on this device' : 'Private by default'}</span>
         </div>
-        <button type="button" className="theme-toggle" onClick={onToggleTheme}>
-          {theme === 'dark' ? '☀  Light mode' : '☾  Dark mode'}
-        </button>
       </div>
     </aside>
   )

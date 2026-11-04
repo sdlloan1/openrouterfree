@@ -1,7 +1,11 @@
 # srt ai
 
 A free, private AI chat with a Venice-style interface, powered by OpenRouter's free
-open models.
+open models. The interface is light-only by design.
+
+Attach files from the composer: images are downscaled in the browser and sent as
+vision inputs, while text/code files are inlined into the prompt. Up to three
+attachments per message, 8 MB each.
 
 - `client/` — Vite + React single-page app (dev server on port 3000)
 - `api/` — Express service that streams chat completions from OpenRouter

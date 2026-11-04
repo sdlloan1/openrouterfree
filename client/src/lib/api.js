@@ -4,6 +4,41 @@ export async function fetchModels(signal) {
   return response.json()
 }
 
+function buildContent(message) {
+  const text = (message.content || '').trim()
+  const attachments = Array.isArray(message.attachments) ? message.attachments : []
+  const textFiles = attachments.filter((attachment) => attachment.kind === 'text' && attachment.text)
+  const images = attachments.filter((attachment) => attachment.kind === 'image' && attachment.dataUrl)
+
+  if (!textFiles.length && !images.length) return text
+
+  const parts = []
+  if (text) parts.push({ type: 'text', text })
+  if (textFiles.length) {
+    parts.push({
+      type: 'text',
+      text: textFiles
+        .map((file) => `Attached file "${file.name}":\n\`\`\`\n${file.text}\n\`\`\``)
+        .join('\n\n'),
+    })
+  }
+  if (images.length) {
+    if (!parts.length) parts.push({ type: 'text', text: 'Describe this image.' })
+    images.forEach((image) => parts.push({ type: 'image_url', image_url: { url: image.dataUrl } }))
+  }
+  return parts.length === 1 && parts[0].type === 'text' ? parts[0].text : parts
+}
+
+export function toApiMessages(messages) {
+  return messages
+    .map((message) => ({ role: message.role, content: buildContent(message) }))
+    .filter((message) =>
+      typeof message.content === 'string'
+        ? message.content.trim().length > 0
+        : Array.isArray(message.content) && message.content.length > 0
+    )
+}
+
 export async function streamChat({ messages, model, signal, onDelta }) {
   const response = await fetch('/api/chat', {
     method: 'POST',

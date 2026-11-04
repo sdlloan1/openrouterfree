@@ -2,7 +2,7 @@ import express from 'express'
 
 const app = express()
 app.disable('x-powered-by')
-app.use(express.json({ limit: '1mb' }))
+app.use(express.json({ limit: '30mb' }))
 
 const PORT = Number(process.env.PORT || 8000)
 const OPENROUTER_BASE = (process.env.OPENROUTER_BASE_URL || 'https://openrouter.ai/api/v1').replace(/\/$/, '')
@@ -80,15 +80,42 @@ async function loadFreeModels() {
   }
 }
 
+function normalizeContent(content) {
+  if (typeof content === 'string') return content.trim().slice(0, MAX_CHARS)
+  if (!Array.isArray(content)) return ''
+
+  const parts = []
+  for (const part of content) {
+    if (!part || typeof part !== 'object') continue
+    if (part.type === 'text' && typeof part.text === 'string') {
+      const text = part.text.trim().slice(0, MAX_CHARS)
+      if (text) parts.push({ type: 'text', text })
+      continue
+    }
+    if (part.type === 'image_url') {
+      const url = typeof part.image_url === 'string' ? part.image_url : part.image_url?.url
+      const allowed = /^data:image\/(png|jpe?g|webp|gif);base64,/
+      if (typeof url === 'string' && allowed.test(url) && url.length < 8_000_000) {
+        parts.push({ type: 'image_url', image_url: { url } })
+      }
+    }
+  }
+  return parts
+}
+
+function hasContent(content) {
+  return typeof content === 'string' ? content.length > 0 : content.length > 0
+}
+
 function normalizeMessages(raw) {
   if (!Array.isArray(raw)) return null
   const cleaned = raw
     .filter((message) => message && typeof message === 'object')
     .map((message) => ({
       role: message.role === 'assistant' ? 'assistant' : message.role === 'system' ? 'system' : 'user',
-      content: typeof message.content === 'string' ? message.content.trim().slice(0, MAX_CHARS) : '',
+      content: normalizeContent(message.content),
     }))
-    .filter((message) => message.content.length > 0)
+    .filter((message) => hasContent(message.content))
     .slice(-MAX_MESSAGES)
   if (!cleaned.some((message) => message.role === 'user')) return null
   return cleaned
