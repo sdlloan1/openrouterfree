@@ -143,8 +143,14 @@ function normalizeMessages(raw) {
 }
 
 // The service URL is opened in a browser as often as it is called, so the root
-// answers with a status summary instead of the catch-all 404 below.
+// sends visitors to the chat interface instead of answering with JSON.
+const PUBLIC_APP_URL = (process.env.PUBLIC_APP_URL || 'https://sdlloan1.github.io/openrouterfree/').trim()
+
 app.get('/', (_req, res) => {
+  res.redirect(302, PUBLIC_APP_URL)
+})
+
+app.get('/api/status', (_req, res) => {
   res.json({
     ok: true,
     service: 'srt ai api',
