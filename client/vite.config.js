@@ -14,7 +14,10 @@ if (previewMode) {
   if (extra) allowedHosts.push(...extra.split(',').map((host) => host.trim()).filter(Boolean))
 }
 
-export default defineConfig({
+export default defineConfig(({ command }) => ({
+  // GitHub Pages serves this project under /openrouterfree/, so production
+  // asset URLs need that prefix. `vite dev` keeps serving from /.
+  base: command === 'build' ? '/openrouterfree/' : '/',
   plugins: [react()],
   server: {
     host: '0.0.0.0',
@@ -30,4 +33,4 @@ export default defineConfig({
     },
     ...(previewMode ? { hmr: { clientPort: 443 } } : {}),
   },
-})
+}))

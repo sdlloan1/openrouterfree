@@ -1,0 +1,16 @@
+services:
+  - type: web
+    name: openrouterfree-api
+    runtime: node
+    plan: free
+    rootDir: api
+    buildCommand: npm ci --omit=dev
+    startCommand: npm start
+    healthCheckPath: /api/health
+    envVars:
+      - key: OPENROUTER_API_KEY
+        sync: false
+      - key: ALLOWED_ORIGINS
+        value: https://sdlloan1.github.io
+      - key: PUBLIC_APP_URL
+        value: https://sdlloan1.github.io/openrouterfree/

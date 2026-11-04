@@ -1,5 +1,10 @@
+// The Vite dev server proxies /api to the Express service, so a relative path
+// works locally. The GitHub Pages build talks to the Render API instead and
+// passes its URL as VITE_API_BASE_URL at build time.
+const API_BASE = (import.meta.env.VITE_API_BASE_URL || '').replace(/\/+$/, '')
+
 export async function fetchModels(signal) {
-  const response = await fetch('/api/models', { signal })
+  const response = await fetch(`${API_BASE}/api/models`, { signal })
   if (!response.ok) throw new Error('Could not load the model list.')
   return response.json()
 }
@@ -40,7 +45,7 @@ export function toApiMessages(messages) {
 }
 
 export async function streamChat({ messages, model, signal, onDelta }) {
-  const response = await fetch('/api/chat', {
+  const response = await fetch(`${API_BASE}/api/chat`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ messages, model }),
